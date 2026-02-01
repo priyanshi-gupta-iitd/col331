@@ -4,10 +4,9 @@
 
 extern char end[]; // first address after kernel loaded from ELF file
 
-void
-halt(void)
+void halt(void) //shut down 
 {
-  cprintf("Bye COL%d!\n\0", 331);
+  cprintf("Bye COL%d!\n\0", 331); 
   outw(0x604, 0x2000);
   // For older versions of QEMU, 
   outw(0xB004, 0x2000);
@@ -17,10 +16,9 @@ halt(void)
 // Bootstrap processor starts running C code here.
 // Allocate a real stack and switch to it, first
 // doing some setup required for memory allocator to work.
-int
-main(void)
+int main(void)
 {
-  mpinit();        // detect other processors
+  mpinit();        // detect other processors, for multiprocessor systems
   lapicinit();     // interrupt controller
   picinit();       // disable pic
   ioapicinit();    // another interrupt controller

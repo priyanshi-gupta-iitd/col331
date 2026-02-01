@@ -1,6 +1,9 @@
 // The local APIC manages internal (non-I/O) interrupts.
 // See Chapter 8 & Appendix C of Intel processor manual volume 3.
 
+
+//DRIVER OF LAPIC
+
 #include "param.h"
 #include "types.h"
 #include "defs.h"
@@ -8,8 +11,8 @@
 #include "mmu.h"
 #include "x86.h"
 
-// Local APIC registers, divided by 4 for use as uint[] indices.
-#define ID      (0x0020/4)   // ID
+// Local APIC registers (hardware not RAM), divided by 4 for use as uint[] indices.
+#define ID      (0x0020/4)   // ID //these fields require <= 8 bits 
 #define VER     (0x0030/4)   // Version
 #define TPR     (0x0080/4)   // Task Priority
 #define EOI     (0x00B0/4)   // EOI
@@ -39,20 +42,18 @@
 #define TCCR    (0x0390/4)   // Timer Current Count
 #define TDCR    (0x03E0/4)   // Timer Divide Configuration
 
-volatile uint *lapic;  // Initialized in mp.c
+volatile uint *lapic;  // Initialized in mp.c  , 4 bytes
 
 //PAGEBREAK!
-static void
-lapicw(int index, int value)
+static void lapicw(int index, int value)
 {
   lapic[index] = value;
   lapic[ID];  // wait for write to finish, by reading
 }
 
-void
-lapicinit(void)
+void lapicinit(void)
 {
-  if(!lapic)
+  if(!lapic) //uninitialized
     return;
 
   // Enable local APIC; set spurious interrupt vector.
@@ -66,12 +67,12 @@ lapicinit(void)
   lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
   lapicw(TICR, 10000000);
 
-  // Disable logical interrupt lines.
+  // Disable logical interrupt lines. (these are old styled)
   lapicw(LINT0, MASKED);
   lapicw(LINT1, MASKED);
 
   // Disable performance counter overflow interrupts
-  // on machines that provide that interrupt entry.
+  // on machines that provide that interrupt entry. (not used by xv6)
   if(((lapic[VER]>>16) & 0xFF) >= 4)
     lapicw(PCINT, MASKED);
 
@@ -95,10 +96,26 @@ lapicinit(void)
   lapicw(TPR, 0);
 }
 
-int
-lapicid(void)
+//General overview of LAPIC
+/*
+Enables the Local APIC so the CPU can receive interrupts.
+
+Sets up the per-CPU timer to generate periodic clock interrupts.
+
+Disables legacy interrupt inputs (old PIC lines).
+
+Configures error handling for APIC faults.
+
+Clears any pending interrupts from boot.
+
+Synchronizes APIC state across CPUs.
+
+Allows interrupts to be delivered to the processor.
+*/
+
+int lapicid(void)
 {
   if (!lapic)
     return 0;
-  return lapic[ID] >> 24;
+  return lapic[ID] >> 24; //since id is highest 8 bits of the ID register
 }

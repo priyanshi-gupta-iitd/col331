@@ -4,8 +4,7 @@
 // #include "memlayout.h"
 
 // Record the current call stack in pcs[] by following the %ebp chain.
-void
-getcallerpcs(void *v, uint pcs[])
+void getcallerpcs(void *v, uint pcs[])
 {
   uint *ebp;
   int i;

@@ -9,8 +9,7 @@
 static void consputc(int);
 static int panicked = 0;
 
-static void
-printint(int xx, int base, int sign)
+static void printint(int xx, int base, int sign)
 {
   static char digits[] = "0123456789abcdef";
   char buf[16];
@@ -35,8 +34,7 @@ printint(int xx, int base, int sign)
 }
 
 // Print to the console. only understands %d, %x, %p, %s.
-void
-cprintf(char *fmt, ...)
+void cprintf(char *fmt, ...)
 {
   int i, c;
   uint *argp;
@@ -81,8 +79,7 @@ cprintf(char *fmt, ...)
   }
 }
 
-void
-panic(char *s)
+void panic(char *s)
 {
   int i;
   uint pcs[10];
@@ -102,8 +99,7 @@ panic(char *s)
 
 #define BACKSPACE 0x100
 
-void
-consputc(int c)
+void consputc(int c)
 {
   if(c == BACKSPACE){
     uartputc('\b'); uartputc(' '); uartputc('\b');

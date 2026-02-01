@@ -9,8 +9,7 @@
 
 static int uart;    // is there a uart?
 
-void
-uartinit(void)
+void uartinit(void)
 {
   char *p;
 
@@ -35,13 +34,11 @@ uartinit(void)
     uartputc(*p);
 }
 
-void
-uartputc(int c)
+void uartputc(int c)
 {
   int i;
 
-  if(!uart)
-    return;
+  if(!uart) return;
   for(i = 0; i < 128 && !(inb(COM1+5) & 0x20); i++);
   outb(COM1+0, c);
 }

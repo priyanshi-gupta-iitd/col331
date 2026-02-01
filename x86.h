@@ -9,8 +9,7 @@ inb(ushort port)
   return data;
 }
 
-static inline void
-insl(int port, void *addr, int cnt)
+static inline void insl(int port, void *addr, int cnt) //copies segment from disk
 {
   asm volatile("cld; rep insl" :
                "=D" (addr), "=c" (cnt) :

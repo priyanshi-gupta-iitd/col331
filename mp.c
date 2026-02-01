@@ -13,10 +13,9 @@
 
 struct cpu cpus[NCPU];
 int ncpu;
-uchar ioapicid;
+uchar ioapicid; 
 
-static uchar
-sum(uchar *addr, int len)
+static uchar sum(uchar *addr, int len) //helper function for checksum calculation , calculates sum of bytes
 {
   int i, sum;
 
@@ -27,8 +26,7 @@ sum(uchar *addr, int len)
 }
 
 // Look for an MP structure in the len bytes at addr.
-static struct mp*
-mpsearch1(uint a, int len)
+static struct mp* mpsearch1(uint a, int len)  //scan memory from a to a+len for _MP_
 {
   uchar *e, *p, *addr;
 
@@ -46,53 +44,50 @@ mpsearch1(uint a, int len)
 // 1) in the first KB of the EBDA;
 // 2) in the last KB of system base memory;
 // 3) in the BIOS ROM between 0xE0000 and 0xFFFFF.
-static struct mp*
-mpsearch(void)
+static struct mp* mpsearch(void)
 {
-  uchar *bda;
+  uchar *bda; //bda is bios data area
   uint p;
   struct mp *mp;
 
   // bda = (uchar *) P2V(0x400);
   bda = (uchar *) 0x400;
   if((p = ((bda[0x0F]<<8)| bda[0x0E]) << 4)){
-    if((mp = mpsearch1(p, 1024)))
+    if((mp = mpsearch1(p, 1024))) //searching first KB of ebda
       return mp;
   } else {
-    p = ((bda[0x14]<<8)|bda[0x13])*1024;
-    if((mp = mpsearch1(p-1024, 1024)))
+    p = ((bda[0x14]<<8)|bda[0x13])*1024; 
+    if((mp = mpsearch1(p-1024, 1024))) //base memory end
       return mp;
   }
-  return mpsearch1(0xF0000, 0x10000);
-}
+  return mpsearch1(0xF0000, 0x10000); //bios rom
+} 
 
 // Search for an MP configuration table.  For now,
 // don't accept the default configurations (physaddr == 0).
 // Check for correct signature, calculate the checksum and,
 // if correct, check the version.
 // To do: check extended table checksum.
-static struct mpconf*
-mpconfig(struct mp **pmp)
+static struct mpconf* mpconfig(struct mp **pmp)
 {
   struct mpconf *conf;
   struct mp *mp;
 
   if((mp = mpsearch()) == 0 || mp->physaddr == 0)
-    return 0;
+    return 0; //fail if not found
   // conf = (struct mpconf*) P2V((uint) mp->physaddr);
-  conf = (struct mpconf*) (uint) mp->physaddr;
+  conf = (struct mpconf*) (uint) mp->physaddr; //pointer to mpconf from mp 
   if(memcmp(conf, "PCMP", 4) != 0)
     return 0;
   if(conf->version != 1 && conf->version != 4)
     return 0;
-  if(sum((uchar*)conf, conf->length) != 0)
+  if(sum((uchar*)conf, conf->length) != 0) //checksum
     return 0;
-  *pmp = mp;
+  *pmp = mp; //set mp and return mpconf
   return conf;
 }
 
-void
-mpinit(void)
+void mpinit(void)
 {
   uchar *p, *e;
   int ismp;
@@ -101,17 +96,18 @@ mpinit(void)
   struct mpproc *proc;
   struct mpioapic *ioapic;
 
-  if((conf = mpconfig(&mp)) == 0)
-    panic("Expect to run on an SMP");
-  ismp = 1;
+  if((conf = mpconfig(&mp)) == 0) 
+    panic("Expect to run on an SMP"); //not SMP
+  ismp = 1; //here we set SMP
   lapic = (uint*)conf->lapicaddr;
+  //reading entries
   for(p=(uchar*)(conf+1), e=(uchar*)conf+conf->length; p<e; ){
     switch(*p){
     case MPPROC:
-      proc = (struct mpproc*)p;
-      if(ncpu < NCPU) {
+      proc = (struct mpproc*)p; //create a cpu
+      if(ncpu < NCPU) { //add a cpu
         cpus[ncpu].apicid = proc->apicid;  // apicid may differ from ncpu
-        ncpu++;
+        ncpu++; 
       }
       p += sizeof(struct mpproc);
       continue;
@@ -120,20 +116,20 @@ mpinit(void)
       ioapicid = ioapic->apicno;
       p += sizeof(struct mpioapic);
       continue;
-    case MPBUS:
-    case MPIOINTR:
-    case MPLINTR:
+    case MPBUS: //nothing
+    case MPIOINTR: //nothing
+    case MPLINTR: //Interrupt vector of size 8 
       p += 8;
       continue;
     default:
-      ismp = 0;
+      ismp = 0; //if the above are missing then SMP so make flag 0
       break;
     }
   }
-  if(!ismp)
+  if(!ismp) //and panic
     panic("Didn't find a suitable machine");
 
-  if(mp->imcrp){
+  if(mp->imcrp){ 
     // Bochs doesn't support IMCR, so this doesn't run on Bochs.
     // But it would on real hardware.
     outb(0x22, 0x70);   // Select IMCR
