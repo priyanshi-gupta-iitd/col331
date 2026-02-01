@@ -11,30 +11,27 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 uint ticks;
 
-void
-tvinit(void)
+void tvinit(void)
 {
   int i;
 
-  for(i = 0; i < 256; i++)
+  for(i = 0; i < 256; i++) //setting cs for all 256 entries
     SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
 }
 
-void
-idtinit(void)
+void idtinit(void)
 {
-  lidt(idt, sizeof(idt));
+  lidt(idt, sizeof(idt)); // calls load idt
 }
 
 //PAGEBREAK: 41
-void
-trap(struct trapframe *tf)
+void trap(struct trapframe *tf)
 {
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
     ticks++;
     cprintf("Tick! %d\n\0", ticks);
-    lapiceoi();
+    lapiceoi(); //end of interrupt signal to local apic
     break;
   case T_IRQ0 + 7:
   case T_IRQ0 + IRQ_SPURIOUS:

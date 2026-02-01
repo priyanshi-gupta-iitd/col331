@@ -15,9 +15,9 @@ main(void)
   picinit();       // disable pic
   ioapicinit();    // another interrupt controller
   uartinit();      // serial port
-  tvinit();        // trap vectors
+  tvinit();        // trap vectors, prepares place for idt array in memory 
   idtinit();       // load idt register
   sti();
   for(;;)
-    wfi();
+    wfi(); //wait for interrupt
 }
