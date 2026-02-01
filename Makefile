@@ -3,6 +3,7 @@ OBJS = \
 	ioapic.o\
 	lapic.o\
 	main.o\
+	mouse.o\
 	mp.o\
 	picirq.o\
 	uart.o\

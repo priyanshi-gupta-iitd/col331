@@ -28,6 +28,10 @@ void            mpinit(void);
 void            picenable(int);
 void            picinit(void);
 
+// mouse.c
+void            mouseinit(void);
+void            mouseintr(void);
+
 // proc.c
 int             cpuid(void);
 struct cpu*     mycpu(void);
